@@ -1,0 +1,32 @@
+# This repo tracks only my own work + tooling, never teacher-posted
+# course materials -- see README.md. Everything below is belt-and-
+# braces; the actual staging uses explicit `git add` on specific paths,
+# not `git add -A`, so this mainly guards against future mistakes.
+
+# secrets
+classroom_tool/credentials.json
+classroom_tool/token.json
+phase1_auth_spike/credentials.json
+phase1_auth_spike/token.json
+
+# venvs
+**/venv/
+
+# NOTE: deliberately NOT blanket-ignoring the semester folders here.
+# Git's directory-level ignore blocks descending into the directory at
+# all, which would fight with the explicit `git add` of specific
+# my-submission/ and README.md paths inside them (would need `add -f`
+# everywhere). Scoping to "my own work only" is enforced entirely by
+# what gets explicitly `git add`-ed (see the batch commit commands),
+# never by `git add -A` / `git add .`. Everything else under Fall*/
+# Spring*/Summer*/ just shows as untracked in `git status` and is
+# never staged.
+
+# partial/in-progress downloads
+*.part
+
+# scratch
+classroom_tool/download_failures.log
+classroom_tool/*.test.yaml
+__pycache__/
+.claude/

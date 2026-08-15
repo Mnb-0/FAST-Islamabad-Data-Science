@@ -1,0 +1,397 @@
+_readme: 'Hand-edit semester / course_code freely, then re-run downstream phases -- they load from this
+  file, not from inventory.json, so your edits stick. semester_confidence: low means creationTime fell
+  in Jun/Jul (calendar-ambiguous between terms). code_confidence: low means no Dept+Number pattern was
+  found in the course name, so a slug of the title was used instead -- cosmetic only, safe to rename.'
+courses:
+  '618734709182':
+    name: Programming Fundamentals Fall 2023
+    section: AI, DS
+    creation_time: '2023-08-20T08:41:31.570Z'
+    semester: Fall2023
+    course_code: programming-fundamentals-fall-2023
+    semester_confidence: high
+    code_confidence: low
+  '618742401383':
+    name: CL1000 Introduction to Information and Communication Technology
+    section: BDS-B
+    creation_time: '2023-08-20T18:38:55.751Z'
+    semester: Fall2023
+    course_code: CL1000
+    semester_confidence: high
+    code_confidence: high
+  '618787721638':
+    name: PF(DS) Lab
+    section: B
+    creation_time: '2023-08-21T06:34:05.975Z'
+    semester: Fall2023
+    course_code: pf-ds-lab
+    semester_confidence: high
+    code_confidence: low
+  '589276756021':
+    name: MT1003 Calculus and Analytical Geometry
+    section: BDS B
+    creation_time: '2023-08-22T06:18:45.858Z'
+    semester: Fall2023
+    course_code: MT1003
+    semester_confidence: high
+    code_confidence: high
+  '619297312425':
+    name: Ideology and Constitution of Pakistan
+    section: DS-B
+    creation_time: '2023-08-24T07:02:31.100Z'
+    semester: Fall2023
+    course_code: ideology-and-constitution-of-pakistan
+    semester_confidence: high
+    code_confidence: low
+  '619745599422':
+    name: Functional English Lab
+    section: DS-B1
+    creation_time: '2023-08-28T06:25:31.904Z'
+    semester: Fall2023
+    course_code: functional-english-lab
+    semester_confidence: high
+    code_confidence: low
+  '589453741436':
+    name: Functional English
+    section: DS-B
+    creation_time: '2023-08-31T08:08:46.939Z'
+    semester: Fall2023
+    course_code: functional-english
+    semester_confidence: high
+    code_confidence: low
+  '655167154820':
+    name: SP24 Object Oriented Programming BS(DS/AI)
+    section: null
+    creation_time: '2024-01-19T09:13:01.903Z'
+    semester: Spring2024
+    course_code: sp24-object-oriented-programming-bs
+    semester_confidence: high
+    code_confidence: low
+  '655196836832':
+    name: OOP (DS)
+    section: A,B & C
+    creation_time: '2024-01-19T13:20:46.279Z'
+    semester: Spring2024
+    course_code: oop-ds
+    semester_confidence: high
+    code_confidence: low
+  '628169126955':
+    name: Discrete Structures Spring 2024
+    section: AI - DS
+    creation_time: '2024-01-21T16:43:10.299Z'
+    semester: Spring2024
+    course_code: discrete-structures-spring-2024
+    semester_confidence: high
+    code_confidence: low
+  '656749120976':
+    name: DS B1 Expository Writing lab
+    section: B1
+    creation_time: '2024-01-22T03:08:19.024Z'
+    semester: Spring2024
+    course_code: ds-b1-expository-writing-lab
+    semester_confidence: high
+    code_confidence: low
+  '657534291947':
+    name: Expository Writing
+    section: DS-B
+    creation_time: '2024-01-25T11:30:29.423Z'
+    semester: Spring2024
+    course_code: expository-writing
+    semester_confidence: high
+    code_confidence: low
+  '651248258458':
+    name: MVC(BSDS)
+    section: Section B
+    creation_time: '2024-01-26T05:11:32.601Z'
+    semester: Spring2024
+    course_code: mvc-bsds
+    semester_confidence: high
+    code_confidence: low
+  '657753090070':
+    name: Islamic Studies
+    section: DS-2B
+    creation_time: '2024-01-26T06:38:54.816Z'
+    semester: Spring2024
+    course_code: islamic-studies
+    semester_confidence: high
+    code_confidence: low
+  '671471534143':
+    name: OOP Lab SP'24 (B)
+    section: B
+    creation_time: '2024-03-27T00:06:19.028Z'
+    semester: Spring2024
+    course_code: oop-lab-sp-24-b
+    semester_confidence: high
+    code_confidence: low
+  '709264781670':
+    name: Probability & Statistics F-25
+    section: 'Data Science Stream '
+    creation_time: '2024-08-10T09:05:39.032Z'
+    semester: Fall2024
+    course_code: probability-statistics-f-25
+    semester_confidence: high
+    code_confidence: low
+  '709370281033':
+    name: Introduction to Data Science (DS 2001)
+    section: A, B, C
+    creation_time: '2024-08-13T17:42:17.410Z'
+    semester: Fall2024
+    course_code: DS2001
+    semester_confidence: high
+    code_confidence: high
+  '704430377813':
+    name: Data Structures Fall 2024
+    section: DS-B&C
+    creation_time: '2024-08-16T08:24:54.249Z'
+    semester: Fall2024
+    course_code: data-structures-fall-2024
+    semester_confidence: high
+    code_confidence: low
+  '704632218808':
+    name: MT-1004 Linear Algebra
+    section: null
+    creation_time: '2024-08-17T04:09:14.944Z'
+    semester: Fall2024
+    course_code: MT1004
+    semester_confidence: high
+    code_confidence: high
+  '709491680118':
+    name: DLD (Fall-24)
+    section: A, B, C
+    creation_time: '2024-08-17T13:11:06.058Z'
+    semester: Fall2024
+    course_code: dld-fall-24
+    semester_confidence: high
+    code_confidence: low
+  '707134297052':
+    name: DLD Lab DS
+    section: B
+    creation_time: '2024-08-19T17:08:13.815Z'
+    semester: Fall2024
+    course_code: dld-ds
+    semester_confidence: high
+    code_confidence: low
+  '707151427377':
+    name: Introduction to DS(Lab)
+    section: DS-B
+    creation_time: '2024-08-19T17:53:36.286Z'
+    semester: Fall2024
+    course_code: introduction-to-ds-lab
+    semester_confidence: high
+    code_confidence: low
+  '707237438692':
+    name: Data Structures
+    section: null
+    creation_time: '2024-08-20T02:01:26.999Z'
+    semester: Fall2024
+    course_code: data-structures
+    semester_confidence: high
+    code_confidence: low
+  '707975475310':
+    name: Data Structures Lab
+    section: DS-B
+    creation_time: '2024-08-23T12:13:17.935Z'
+    semester: Fall2024
+    course_code: data-structures-lab
+    semester_confidence: high
+    code_confidence: low
+  '745620989918':
+    name: Fundamentals of Software Engineering
+    section: AI (A,B) , DS ( A, B, C)
+    creation_time: '2025-01-17T06:04:27.636Z'
+    semester: Spring2025
+    course_code: fundamentals-of-software-engineering
+    semester_confidence: high
+    code_confidence: low
+  '745657956791':
+    name: Database Systems Spring 2025
+    section: DS-A/B
+    creation_time: '2025-01-17T13:39:21.347Z'
+    semester: Spring2025
+    course_code: database-systems-spring-2025
+    semester_confidence: high
+    code_confidence: low
+  '745863047256':
+    name: COAL- AI &DS
+    section: AI-B, DS-A, DS-B, DS-C, AI-A
+    creation_time: '2025-01-19T15:46:51.260Z'
+    semester: Spring2025
+    course_code: coal-ai-ds
+    semester_confidence: high
+    code_confidence: low
+  '746074020396':
+    name: Advanced Statistics S-2025
+    section: Data Science Stream
+    creation_time: '2025-01-21T09:38:37.589Z'
+    semester: Spring2025
+    course_code: advanced-statistics-s-2025
+    semester_confidence: high
+    code_confidence: low
+  '746545064989':
+    name: COMPUTER ORGANIZATION & ASSEMBLY LANGUAGE Spring 2025
+    section: DS 4B
+    creation_time: '2025-01-23T09:04:12.290Z'
+    semester: Spring2025
+    course_code: computer-organization-assembly-language
+    semester_confidence: high
+    code_confidence: low
+  '746847885583':
+    name: Civics & Community Engagement
+    section: DS-4  Sec. A, B, C
+    creation_time: '2025-01-24T17:30:40.117Z'
+    semester: Spring2025
+    course_code: civics-community-engagement
+    semester_confidence: high
+    code_confidence: low
+  '747371362031':
+    name: Database systems-Lab
+    section: BSDS-B
+    creation_time: '2025-01-28T03:59:39.733Z'
+    semester: Spring2025
+    course_code: database-systems-lab
+    semester_confidence: high
+    code_confidence: low
+  '747529574058':
+    name: Psychology
+    section: BS-DS (2023) Sections A,B & C
+    creation_time: '2025-01-28T18:17:16.834Z'
+    semester: Spring2025
+    course_code: psychology
+    semester_confidence: high
+    code_confidence: low
+  '757811451697':
+    name: Database Systems Semester Project
+    section: DS-4(A,B,C), AI-4(A,B)
+    creation_time: '2025-03-08T05:47:19.908Z'
+    semester: Spring2025
+    course_code: database-systems-semester-project
+    semester_confidence: high
+    code_confidence: low
+  '798832469339':
+    name: BS(DS-B)_SS 2012_Technical and Business Writing
+    section: sadia.nauman@nu.edu.pk (Office# D_620 E, 6th Floor, D_Block)
+    creation_time: '2025-08-18T04:46:22.005Z'
+    semester: Fall2025
+    course_code: SS2012
+    semester_confidence: high
+    code_confidence: high
+  '798878267702':
+    name: Operating Systems FALL 2025
+    section: null
+    creation_time: '2025-08-18T15:02:07.606Z'
+    semester: Fall2025
+    course_code: operating-systems-fall-2025
+    semester_confidence: high
+    code_confidence: low
+  '798950575686':
+    name: Algo DS B Fall 2025
+    section: B
+    creation_time: '2025-08-19T06:01:56.450Z'
+    semester: Fall2025
+    course_code: algo-ds-b-fall-2025
+    semester_confidence: high
+    code_confidence: low
+  '774447562063':
+    name: DAV-Lab
+    section: DS-B
+    creation_time: '2025-08-19T07:06:41.681Z'
+    semester: Fall2025
+    course_code: dav-lab
+    semester_confidence: high
+    code_confidence: low
+  '799761430210':
+    name: Data Warehousing Fall 2025
+    section: A, B, C
+    creation_time: '2025-08-25T03:10:40.082Z'
+    semester: Fall2025
+    course_code: data-warehousing-fall-2025
+    semester_confidence: high
+    code_confidence: low
+  '780063635066':
+    name: DAV_Theory-BDS_5
+    section: B
+    creation_time: '2025-08-25T10:21:16.547Z'
+    semester: Fall2025
+    course_code: dav-theory-bds-5
+    semester_confidence: high
+    code_confidence: low
+  '774761958045':
+    name: OS Lab
+    section: DS-B
+    creation_time: '2025-08-26T08:16:34.084Z'
+    semester: Fall2025
+    course_code: os-lab
+    semester_confidence: high
+    code_confidence: low
+  '800019387152':
+    name: DataWarehouse and Business Intelligence Lab
+    section: DS - B
+    creation_time: '2025-08-26T12:50:06.901Z'
+    semester: Fall2025
+    course_code: datawarehouse-and-business-intelligence
+    semester_confidence: high
+    code_confidence: low
+  '839876340614':
+    name: Parallel and Distributed Computing -SP26
+    section: '[BS AI-A, AI-B] & [DS A, B, C]'
+    creation_time: '2026-01-16T11:15:33.553Z'
+    semester: Spring2026
+    course_code: parallel-and-distributed-computing-sp26
+    semester_confidence: high
+    code_confidence: low
+  '840044322577':
+    name: Natural Language Processing
+    section: DS
+    creation_time: '2026-01-17T07:44:40.386Z'
+    semester: Spring2026
+    course_code: natural-language-processing
+    semester_confidence: high
+    code_confidence: low
+  '840201468253':
+    name: Data Mining - Spring 2026
+    section: A, B, C
+    creation_time: '2026-01-19T16:52:12.349Z'
+    semester: Spring2026
+    course_code: data-mining-spring-2026
+    semester_confidence: high
+    code_confidence: low
+  '840257082692':
+    name: Deep Learning SP-26
+    section: BS(DS- A, B, C)
+    creation_time: '2026-01-20T03:35:13.900Z'
+    semester: Spring2026
+    course_code: deep-learning-sp-26
+    semester_confidence: high
+    code_confidence: low
+  '840511583231':
+    name: AI Lab
+    section: B
+    creation_time: '2026-01-21T06:51:05.347Z'
+    semester: Spring2026
+    course_code: ai-lab
+    semester_confidence: high
+    code_confidence: low
+  '841200899737':
+    name: Artificial Intelligence BSDS SP26
+    section: A,B,C
+    creation_time: '2026-01-25T15:35:54.755Z'
+    semester: Spring2026
+    course_code: artificial-intelligence-bsds-sp26
+    semester_confidence: high
+    code_confidence: low
+  '866631176796':
+    name: FYP Fall 2026 - Spring 2027
+    section: null
+    creation_time: '2026-06-01T10:07:44.202Z'
+    semester: Fall2026
+    course_code: fyp-fall-2026-spring-2027
+    semester_confidence: low
+    code_confidence: low
+  '868168897242':
+    name: ISB Internship FSC Batch-2023
+    section: Batch-2023
+    creation_time: '2026-06-18T05:12:29.229Z'
+    semester: Summer2026
+    course_code: isb-internship-fsc-batch-2023
+    semester_confidence: low
+    code_confidence: low

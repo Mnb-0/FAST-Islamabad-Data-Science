@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Beijing Air Quality: Deep Dive</title>
+    <script src="d3.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --primary: #2c3e50;
+            --accent: #e74c3c;
+            --highlight: #3498db;
+            --text-main: #333;
+            --text-sub: #7f8c8d;
+            --border: #e1e4e8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+        header {
+            background: var(--primary);
+            color: #fff;
+            padding: 8px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+        h1 { margin: 0; font-size: 18px; font-weight: 600; }
+        .subtitle { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+        .tag { background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Controls */
+        .controls-bar {
+            background: var(--card-bg);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-shrink: 0;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-sub); }
+        select {
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fdfdfd;
+            font-size: 12px;
+            color: var(--text-main);
+            cursor: pointer;
+            min-width: 120px;
+        }
+        select:hover { border-color: var(--highlight); }
+
+        .stats-panel {
+            margin-left: auto;
+            display: flex;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+        .stat-unit { text-align: right; }
+        .stat-val { font-weight: 700; color: var(--accent); font-feature-settings: "tnum"; font-size: 14px; }
+        .stat-desc { font-size: 9px; text-transform: uppercase; color: var(--text-sub); }
+
+        /* Grid System */
+        #dashboard {
+            flex: 1;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            grid-template-rows: 5fr 4fr 1.5fr;
+            gap: 15px;
+            min-height: 0;
+        }
+
+        .view-panel {
+            background: var(--card-bg);
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 8px 12px;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Grid Layout Assignments */
+        #main-view { grid-column: 1 / 4; grid-row: 1 / 2; }
+        #rank-view { grid-column: 1 / 2; grid-row: 2 / 3; }
+        #scatter-view { grid-column: 2 / 3; grid-row: 2 / 3; }
+        #dist-view { grid-column: 3 / 4; grid-row: 2 / 3; }
+        #context-view { grid-column: 1 / 4; grid-row: 3 / 4; }
+
+        /* Loading Overlay */
+        .loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.98);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999;
+        }
+        .spinner {
+            width: 30px; height: 30px; border: 3px solid #eee;
+            border-top: 3px solid var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 10px;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Tooltip */
+        #tooltip {
+            position: absolute; opacity: 0; pointer-events: none;
+            background: rgba(20, 20, 25, 0.95); color: #fff;
+            padding: 8px 12px; border-radius: 4px; font-size: 11px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 1000;
+            transform: translate(-50%, -100%); margin-top: -12px;
+            white-space: nowrap;
+        }
+        .tt-date { color: #aaa; margin-bottom: 4px; border-bottom: 1px solid #444; padding-bottom: 3px; font-weight: 600; }
+        .tt-row { display: flex; justify-content: space-between; gap: 15px; margin-top: 2px; }
+        .tt-val { font-weight: 700; color: #fff; }
+
+        /* D3 Elements */
+        svg { display: block; width: 100%; height: 100%; }
+        .line { fill: none; stroke-width: 1.5px; opacity: 0.8; stroke-linejoin: round; }
+        .axis text { fill: #999; font-size: 9px; }
+        .axis path, .axis line { stroke: #eee; }
+        .grid-line { stroke: #f5f5f5; stroke-dasharray: 2; }
+        
+        .cursor-line { stroke: #2c3e50; stroke-width: 1; stroke-dasharray: 4; opacity: 0; pointer-events: none; }
+        .overlay { fill: transparent; cursor: crosshair; }
+        
+        /* Scatter Dots */
+        .dot { stroke: none; fill-opacity: 0.6; transition: fill-opacity 0.2s; }
+        .dot:hover { stroke: #333; stroke-width: 1px; fill-opacity: 1; }
+
+        /* Bar Chart */
+        .bar { transition: width 0.3s; }
+        .bar:hover { fill: var(--primary) !important; }
+        .rank-label { fill: #333; font-size: 10px; alignment-baseline: middle; }
+    </style>
+</head>
+<body>
+
+<div id="loader" class="loader">
+    <div class="spinner"></div>
+    <div style="font-weight: 600; color: #444;">Initializing Engine</div>
+    <div id="loader-status" style="font-size: 12px; color: #888; margin-top: 5px;">Fetching Data...</div>
+</div>
+
+<div id="tooltip"></div>
+
+<header>
+    <div>
+        <h1>Beijing Air Quality: Multi-Dimensional Analysis</h1>
+        <div class="subtitle">12-Station Correlation & Trend Network</div>
+    </div>
+    <div class="tag">Offline</div>
+</header>
+
+<div class="controls-bar">
+    <div class="control-group">
+        <label>Main Focus</label>
+        <select id="stationSelect"><option value="All">Aggregate (Mean)</option></select>
+    </div>
+    <div class="control-group">
+        <label>Comparison</label>
+        <select id="compareSelect">
+            <option value="none">Single View</option>
+            <option value="all">Compare All</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Pollutant</label>
+        <select id="indicatorSelect">
+            <option value="PM2.5" selected>PM2.5</option>
+            <option value="PM10">PM10</option>
+            <option value="SO2">SO2</option>
+            <option value="NO2">NO2</option>
+            <option value="CO">CO</option>
+            <option value="O3">O3</option>
+            <option value="TEMP">Temperature</option>
+        </select>
+    </div>
+    <div class="control-group">
+        <label>Aggregation</label>
+        <select id="aggSelect">
+            <option value="day">Daily</option>
+            <option value="week">Weekly</option>
+            <option value="month">Monthly</option>
+        </select>
+    </div>
+    
+    <div class="stats-panel">
+        <div class="stat-unit">
+            <div class="stat-desc">Visible Avg</div>
+            <div id="stat-mean" class="stat-val">--</div>
+        </div>
+        <div class="stat-unit">
+            <div class="stat-desc">Peak</div>
+            <div id="stat-max" class="stat-val">--</div>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard">
+    <div id="main-view" class="view-panel">
+        <div class="panel-header">
+            <span>Temporal Trend (Zoom/Pan Enabled)</span>
+            <span style="font-size:9px; color:#aaa; font-weight:400">Scroll to Zoom X/Y • Double Click Reset</span>
+        </div>
+    </div>
+
+    <div id="rank-view" class="view-panel">
+        <div class="panel-header">Offender Ranking (Avg)</div>
+    </div>
+    <div id="scatter-view" class="view-panel">
+        <div class="panel-header">Wind Correlation (m/s)</div>
+    </div>
+    <div id="dist-view" class="view-panel">
+        <div class="panel-header">Distribution</div>
+    </div>
+
+    <div id="context-view" class="view-panel">
+        <div class="panel-header">Global Timeline (Brush)</div>
+    </div>
+</div>
+
+<script>
+// --- Core Check ---
+if (typeof d3 === 'undefined') {
+    document.getElementById("loader").innerHTML = `<div style="color:red;font-weight:bold">Error: D3.js not found.</div>`;
+    throw new Error("Missing D3");
+}
+
+// --- Configuration ---
+const STATIONS = ["Aotizhongxin", "Changping", "Dingling", "Dongsi", "Guanyuan", "Gucheng", "Huairou", "Nongzhanguan", "Shunyi", "Tiantan", "Wanliu", "Wanshouxigong"];
+const COLORS = d3.scaleOrdinal(d3.schemeTableau10);
+const COLOR_HEAT = d3.scaleSequential(d3.interpolateOrRd);
+const MARGIN = { top: 10, right: 30, bottom: 20, left: 40 };
+
+// --- Global State ---
+let state = {
+    raw: [],
+    view: [],
+    brush: null, // [Date, Date]
+    yDomain: null, // [Min, Max] (For manual zoom)
+    params: { station: "All", compare: "none", indicator: "PM2.5", agg: "day" }
+};
+
+// --- Initialization ---
+async function init() {
+    const status = document.getElementById("loader-status");
+    
+    // 1. Fetch
+    const tasks = STATIONS.map(s => d3.csv(`PRSA_Data_${s}_20130301-20170228.csv`)
+        .then(d => ({status: 'ok', name: s, data: d}))
+        .catch(e => ({status: 'fail', name: s, error: e}))
+    );
+
+    const results = await Promise.all(tasks);
+    const success = results.filter(r => r.status === 'ok');
+
+    if(success.length === 0) {
+        status.innerHTML = "<span style='color:red'>No CSV files found.</span>";
+        return;
+    }
+
+    status.innerText = `Processing ${success.length} datasets...`;
+
+    // 2. Process
+    setTimeout(() => {
+        state.raw = success.flatMap(r => r.data.map(d => ({
+            station: r.name,
+            date: new Date(+d.year, +d.month - 1, +d.day, +d.hour),
+            row: d 
+        })));
+
+        // Setup Controls
+        const sel = d3.select("#stationSelect");
+        sel.selectAll("option").remove();
+        sel.append("option").text("Aggregate (Mean)").attr("value", "All");
+        success.forEach(r => sel.append("option").text(r.name).attr("value", r.name));
+
+        document.getElementById("loader").style.display = "none";
+        
+        setupViews();
+        updateProcessing();
+    }, 100);
+}
+
+// --- Data Logic ---
+function updateProcessing() {
+    const ind = state.params.indicator;
+    const aggFunc = {
+        'day': d3.timeDay,
+        'week': d3.timeWeek,
+        'month': d3.timeMonth
+    }[state.params.agg];
+
+    // Aggregation
+    const rolled = d3.flatRollup(state.raw, 
+        v => ({
+            val: d3.mean(v, d => +d.row[ind]),
+            wspm: d3.mean(v, d => +d.row['WSPM'])
+        }),
+        d => aggFunc(d.date),
+        d => d.station
+    );
+
+    state.view = rolled.map(([date, station, metrics]) => ({
+        date: date,
+        station: station,
+        val: metrics.val,
+        wspm: metrics.wspm
+    })).filter(d => !isNaN(d.val)).sort((a,b) => a.date - b.date);
+
+    // Default brush (full range) if not set
+    if(!state.brush) state.brush = d3.extent(state.view, d => d.date);
+    
+    // Reset Y-zoom on new data processing (optional, usually good UX)
+    state.yDomain = null;
+
+    render();
+}
+
+// --- Chart Objects ---
+let charts = {};
+
+function setupViews() {
+    const init = (id) => {
+        const el = document.getElementById(id);
+        const h = el.clientHeight - 35; 
+        const w = el.clientWidth;
+        const svg = d3.select(el).append("svg").attr("width", w).attr("height", h)
+            .append("g").attr("transform", `translate(${MARGIN.left},${MARGIN.top})`);
+        return { 
+            g: svg, root: d3.select(el).select("svg"),
+            w: w - MARGIN.left - MARGIN.right, 
+            h: h - MARGIN.top - MARGIN.bottom 
+        };
+    };
+
+    // 1. Main View (Zoomable)
+    charts.main = init("main-view");
+    charts.main.x = d3.scaleTime().range([0, charts.main.w]);
+    charts.main.y = d3.scaleLinear().range([charts.main.h, 0]);
+    charts.main.g.append("g").attr("class", "grid").attr("opacity", 0.5);
+    charts.main.g.append("g").attr("class", "axis-x").attr("transform", `translate(0,${charts.main.h})`);
+    charts.main.g.append("g").attr("class", "axis-y");
+    
+    // Clip Path
+    charts.main.root.append("defs").append("clipPath").attr("id", "clip-main")
+        .append("rect").attr("width", charts.main.w).attr("height", charts.main.h);
+    
+    charts.main.content = charts.main.g.append("g").attr("clip-path", "url(#clip-main)");
+    charts.main.content.append("g").attr("class", "lines");
+
+    // Interaction Layer
+    charts.main.zoom = d3.zoom()
+        .scaleExtent([1, 100])
+        .extent([[0, 0], [charts.main.w, charts.main.h]])
+        .on("zoom", onMainZoom);
+
+    charts.main.root.append("rect") // Overlay on root to capture all events
+        .attr("class", "overlay")
+        .attr("width", charts.main.w + MARGIN.left + MARGIN.right)
+        .attr("height", charts.main.h + MARGIN.top + MARGIN.bottom)
+        .attr("transform", `translate(${MARGIN.left},${MARGIN.top})`)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .call(charts.main.zoom)
+        .on("mousemove", onMainHover)
+        .on("mouseout", () => {
+            charts.main.cursor.style("opacity", 0);
+            document.getElementById("tooltip").style.opacity = 0;
+        })
+        .on("dblclick", () => {
+            state.brush = d3.extent(state.view, d => d.date);
+            state.yDomain = null;
+            render();
+            // Reset zoom transform identity to match new state? Complex.
+            // Simple reset:
+            charts.main.root.select(".overlay").transition().duration(750).call(charts.main.zoom.transform, d3.zoomIdentity);
+        });
+        
+    charts.main.cursor = charts.main.g.append("line").attr("class", "cursor-line").attr("y2", charts.main.h);
+
+    // 2. Rank
+    charts.rank = init("rank-view");
+    charts.rank.x = d3.scaleLinear().range([0, charts.rank.w]);
+    charts.rank.y = d3.scaleBand().range([0, charts.rank.h]).padding(0.2);
+    charts.rank.g.append("g").attr("class", "axis-y");
+    charts.rank.g.append("g").attr("class", "bars");
+
+    // 3. Scatter
+    charts.scatter = init("scatter-view");
+    charts.scatter.x = d3.scaleLinear().range([0, charts.scatter.w]);
+    charts.scatter.y = d3.scaleLinear().range([charts.scatter.h, 0]);
+    charts.scatter.g.append("g").attr("class", "axis-x").attr("transform", `translate(0,${charts.scatter.h})`);
+    charts.scatter.g.append("g").attr("class", "axis-y");
+    charts.scatter.g.append("g").attr("class", "dots");
+
+    // 4. Dist
+    charts.dist = init("dist-view");
+    charts.dist.x = d3.scaleLinear().range([0, charts.dist.w]);
+    charts.dist.y = d3.scaleLinear().range([charts.dist.h, 0]);
+    charts.dist.g.append("g").attr("class", "axis-x").attr("transform", `translate(0,${charts.dist.h})`);
+    charts.dist.g.append("g").attr("class", "hist");
+
+    // 5. Context
+    charts.ctx = init("context-view");
+    charts.ctx.x = d3.scaleTime().range([0, charts.ctx.w]);
+    charts.ctx.y = d3.scaleLinear().range([charts.ctx.h, 0]);
+    charts.ctx.g.append("path").attr("class", "area-bg").attr("fill", "#e0e0e0");
+    charts.ctx.g.append("g").attr("class", "axis-x").attr("transform", `translate(0,${charts.ctx.h})`);
+    charts.ctx.brush = d3.brushX().extent([[0, 0], [charts.ctx.w, charts.ctx.h]]).on("end", onBrushEnd);
+    charts.ctx.g.append("g").attr("class", "brush").call(charts.ctx.brush);
+}
+
+// --- Render Loop ---
+function render(source = "internal") {
+    // 1. Data Filtering
+    const visible = state.view.filter(d => d.date >= state.brush[0] && d.date <= state.brush[1]);
+    
+    // 2. Auto-Scales
+    const yMax = d3.max(visible, d => d.val) || 10;
+    COLOR_HEAT.domain([0, yMax]);
+
+    // --- Main Chart ---
+    // If Manual Y Zoom exists, use it. Else Auto.
+    charts.main.x.domain(state.brush);
+    charts.main.y.domain(state.yDomain || [0, yMax * 1.1]);
+
+    // Grouping
+    let groups = [];
+    if (state.params.station !== "All") {
+        groups = [{ key: state.params.station, values: visible.filter(d => d.station === state.params.station) }];
+    } else if (state.params.compare === "all") {
+        groups = Array.from(d3.group(visible, d => d.station), ([key, values]) => ({key, values}));
+    } else {
+        const agg = d3.rollups(visible, v => d3.mean(v, d => d.val), d => d.date)
+            .map(([d,v]) => ({date:d, val:v})).sort((a,b)=>a.date-b.date);
+        groups = [{ key: "Aggregate", values: agg }];
+    }
+    state.groups = groups; // Save for tooltip
+
+    // Draw Axes & Grid
+    charts.main.g.select(".axis-x").call(d3.axisBottom(charts.main.x).ticks(5));
+    charts.main.g.select(".axis-y").call(d3.axisLeft(charts.main.y).ticks(5));
+    charts.main.g.select(".grid").call(d3.axisLeft(charts.main.y).tickSize(-charts.main.w).tickFormat("")).selectAll("line").attr("class", "grid-line");
+
+    // Draw Lines
+    const lineGen = d3.line().x(d => charts.main.x(d.date)).y(d => charts.main.y(d.val));
+    const lines = charts.main.content.select(".lines").selectAll(".line").data(groups, d => d.key);
+
+    lines.enter().append("path").attr("class", "line")
+        .merge(lines)
+        .attr("stroke", d => d.key === "Aggregate" ? "#2c3e50" : COLORS(d.key))
+        .attr("d", d => lineGen(d.values));
+    lines.exit().remove();
+
+    // --- Auxiliary Charts (Rank, Scatter, Dist) ---
+    renderAux(visible, yMax);
+
+    // --- Context Chart ---
+    // Only update visuals, brush handle updates automatically usually
+    // But if render triggered by Zoom, we must update brush handle
+    if (source === "zoom") {
+        charts.ctx.g.select(".brush").call(charts.ctx.brush.move, state.brush.map(charts.ctx.x));
+    } else {
+        // If render triggered by data/brush, update Zoom transform to prevent jumping
+        // This is the tricky part. We just reset transform to identity but mapped?
+        // Simpler: Just update the context chart BG.
+        const allAgg = d3.rollups(state.view, v => d3.mean(v, d => d.val), d => d.date)
+            .map(([d,v]) => ({date:d, val:v})).sort((a,b)=>a.date-b.date);
+        charts.ctx.x.domain(d3.extent(state.view, d => d.date));
+        charts.ctx.y.domain([0, d3.max(allAgg, d => d.val)]);
+        
+        charts.ctx.g.select(".area-bg").datum(allAgg)
+            .attr("d", d3.area().x(d => charts.ctx.x(d.date)).y0(charts.ctx.h).y1(d => charts.ctx.y(d.val)));
+        charts.ctx.g.select(".axis-x").call(d3.axisBottom(charts.ctx.x));
+    }
+
+    // Stats
+    const mean = d3.mean(visible, d => d.val);
+    document.getElementById("stat-mean").innerText = mean ? mean.toFixed(1) : "--";
+    document.getElementById("stat-max").innerText = yMax.toFixed(0);
+}
+
+function renderAux(data, yMax) {
+    // 1. Ranking
+    const stats = d3.rollups(data, v => d3.mean(v, d => d.val), d => d.station)
+        .sort((a,b) => b[1] - a[1]);
+    
+    charts.rank.x.domain([0, d3.max(stats, d => d[1]) || 1]);
+    charts.rank.y.domain(stats.map(d => d[0]));
+    
+    charts.rank.g.select(".axis-y").call(d3.axisLeft(charts.rank.y).tickSize(0));
+    const bars = charts.rank.g.select(".bars").selectAll("rect").data(stats, d => d[0]);
+    
+    bars.enter().append("rect").attr("class", "bar")
+        .merge(bars)
+        .transition().duration(200)
+        .attr("y", d => charts.rank.y(d[0]))
+        .attr("height", charts.rank.y.bandwidth())
+        .attr("x", 0)
+        .attr("width", d => charts.rank.x(d[1]))
+        .attr("fill", d => COLOR_HEAT(d[1]));
+    bars.exit().remove();
+
+    // 2. Scatter (Sampled)
+    const scatterData = data.length > 1500 ? data.filter((_,i) => i%3===0) : data;
+    charts.scatter.x.domain([0, d3.max(scatterData, d => d.wspm)||10]);
+    charts.scatter.y.domain([0, yMax]);
+    
+    charts.scatter.g.select(".axis-x").call(d3.axisBottom(charts.scatter.x).ticks(5));
+    charts.scatter.g.select(".axis-y").call(d3.axisLeft(charts.scatter.y).ticks(5));
+    
+    const dots = charts.scatter.g.select(".dots").selectAll("circle").data(scatterData);
+    dots.enter().append("circle").attr("class", "dot")
+        .merge(dots)
+        .attr("cx", d => charts.scatter.x(d.wspm))
+        .attr("cy", d => charts.scatter.y(d.val))
+        .attr("r", 2)
+        .attr("fill", d => COLORS(d.station));
+    dots.exit().remove();
+
+    // 3. Distribution
+    charts.dist.x.domain([0, yMax]);
+    const binGen = d3.bin().domain(charts.dist.x.domain()).thresholds(15).value(d => d.val);
+    const bins = binGen(data);
+    charts.dist.y.domain([0, d3.max(bins, d => d.length)]);
+    
+    charts.dist.g.select(".axis-x").call(d3.axisBottom(charts.dist.x).ticks(5));
+    const dbars = charts.dist.g.select(".hist").selectAll("rect").data(bins);
+    dbars.enter().append("rect")
+        .merge(dbars)
+        .transition().duration(200)
+        .attr("x", d => charts.dist.x(d.x0))
+        .attr("width", d => Math.max(0, charts.dist.x(d.x1) - charts.dist.x(d.x0) - 1))
+        .attr("y", d => charts.dist.y(d.length))
+        .attr("height", d => charts.dist.h - charts.dist.y(d.length))
+        .attr("fill", "#3498db");
+    dbars.exit().remove();
+}
+
+// --- Interaction Handlers ---
+function onMainZoom(e) {
+    if (!e.sourceEvent) return; // Ignore programmatic zoom? No, we need it.
+    
+    const t = e.transform;
+    
+    // Rescale X (Time)
+    // We use the Original Scale to rescale
+    // Note: We need a pristine copy of x-scale or domain to rescale correctly
+    // Simplification: Rescale the current domain based on transform k/x?
+    // Robust D3 way: t.rescaleX(origScale)
+    
+    // Create an original scale ref if missing
+    if (!charts.main.origX) charts.main.origX = charts.main.x.copy();
+    if (!charts.main.origY) charts.main.origY = charts.main.y.copy();
+
+    const newX = t.rescaleX(charts.main.origX);
+    const newY = t.rescaleY(charts.main.origY);
+
+    state.brush = newX.domain();
+    state.yDomain = newY.domain(); // This enables the "Differentiation"
+
+    render("zoom");
+}
+
+function onBrushEnd(e) {
+    if (!e.selection) return;
+    if (e.sourceEvent && e.sourceEvent.type === "zoom") return; // Ignore cyclic
+
+    state.brush = e.selection.map(charts.ctx.x.invert);
+    
+    // Reset Y zoom when brushing context (assumption: user wants to see data fit)
+    // or keep it? Let's keep Y zoom if set, but mostly user resets.
+    // Let's reset Y for clarity.
+    // state.yDomain = null; 
+    
+    render("brush");
+    
+    // We need to update Main Zoom identity so next mouse wheel doesn't jump
+    // But aligning zoom identity to an arbitrary brush selection is complex math.
+    // We skip it for this "Offline" version to avoid jitter bugs. 
+    // Double-click reset fixes any drift.
+}
+
+const bisect = d3.bisector(d => d.date).left;
+
+function onMainHover(e) {
+    const coords = d3.pointer(e);
+    const date0 = charts.main.x.invert(coords[0]);
+    
+    charts.main.cursor
+        .attr("x1", coords[0]).attr("x2", coords[0])
+        .style("opacity", 1);
+
+    // Find nearest data
+    // Use first group as reference
+    if(!state.groups || !state.groups.length) return;
+    
+    // Aggregate tooltip content
+    let html = `<div class="tt-date">${date0.toLocaleDateString()}</div>`;
+    
+    // Sort groups by value at this time
+    // This is expensive but necessary for "Comparison"
+    let points = [];
+    state.groups.forEach(g => {
+        const i = bisect(g.values, date0, 1);
+        const d0 = g.values[i-1], d1 = g.values[i];
+        if(!d0) return;
+        const d = (d1 && (date0 - d0.date > d1.date - date0)) ? d1 : d0;
+        points.push({ key: g.key, val: d.val });
+    });
+    
+    points.sort((a,b) => b.val - a.val).slice(0, 10).forEach(p => {
+        html += `<div class="tt-row">
+            <span style="color:${p.key==='Aggregate'?'#aaa':COLORS(p.key)}">${p.key}</span>
+            <span class="tt-val">${p.val.toFixed(1)}</span>
+        </div>`;
+    });
+
+    const tip = document.getElementById("tooltip");
+    tip.innerHTML = html;
+    tip.style.opacity = 1;
+    tip.style.left = (e.pageX + 15) + "px";
+    tip.style.top = (e.pageY + 15) + "px";
+}
+
+// Listeners
+d3.select("#stationSelect").on("change", function(){ state.params.station = this.value; updateProcessing(); });
+d3.select("#compareSelect").on("change", function(){ state.params.compare = this.value; updateProcessing(); });
+d3.select("#indicatorSelect").on("change", function(){ state.params.indicator = this.value; updateProcessing(); });
+d3.select("#aggSelect").on("change", function(){ state.params.agg = this.value; updateProcessing(); });
+
+init();
+
+</script>
+</body>
+</html>

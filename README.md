@@ -21,4 +21,4 @@ classroom_tool/
 
 ## Commit history
 
-Commits are being pushed in batches (one per semester) over a couple of weeks rather than all at once, via a scheduled job.
+Organized as one commit per semester (tooling/metadata first, then Fall2023 through Summer2026), for readability.

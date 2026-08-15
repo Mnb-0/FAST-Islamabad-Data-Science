@@ -1,0 +1,31 @@
+findMax
+32324
+55900 ns
+32745
+10000 ns
+32767
+19200 ns
+32767
+24200 ns
+
+Selection Sort
+38100 ns
+3713200 ns
+96698600 ns
+389567800 ns
+
+Count Triplets
+218400 ns
+191286000 ns
+
+Merge Sort
+23900 ns
+138200 ns
+681300 ns
+1302700 ns
+
+Binary Search
+100 ns
+100 ns
+100 ns
+200 ns

@@ -1,0 +1,677 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Task 1"
+      ],
+      "metadata": {
+        "id": "BkIbAMOIf5Zi"
+      }
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 16,
+      "metadata": {
+        "id": "3vygs4-ye8O-"
+      },
+      "outputs": [],
+      "source": [
+        "# Packages and cities\n",
+        "packages = [1, 2, 3, 4]\n",
+        "cities = ['A', 'B', 'C']\n",
+        "\n",
+        "# capacity of each city\n",
+        "capacity = {\n",
+        "    'A': 2,\n",
+        "    'B': 3,\n",
+        "    'C': 1\n",
+        "}\n",
+        "\n",
+        "# allowed cities for each package\n",
+        "allowed = {\n",
+        "    1: ['A', 'B'],\n",
+        "    2: ['B', 'C'],\n",
+        "    3: ['A', 'C'],\n",
+        "    4: ['A']\n",
+        "}"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# function to check city capacity\n",
+        "def capacity_ok(assignments, city):\n",
+        "    count = 0\n",
+        "    for p in assignments:\n",
+        "        if assignments[p] == city:\n",
+        "            count += 1\n",
+        "    return count <= capacity[city]\n",
+        "\n",
+        "\n",
+        "# forward checking to remove invalid choices\n",
+        "def forward_check(domains, assignments):\n",
+        "\n",
+        "    new_domains = {p: list(domains[p]) for p in domains}\n",
+        "\n",
+        "    # check if any city already full\n",
+        "    for city in cities:\n",
+        "        used = list(assignments.values()).count(city)\n",
+        "\n",
+        "        if used >= capacity[city]:\n",
+        "            for p in new_domains:\n",
+        "                if city in new_domains[p]:\n",
+        "                    new_domains[p].remove(city)\n",
+        "\n",
+        "    return new_domains\n",
+        "\n",
+        "\n",
+        "# backtracking search with forward checking\n",
+        "def solve(packages, domains, assignments):\n",
+        "\n",
+        "    # if all packages assigned\n",
+        "    if len(assignments) == len(packages):\n",
+        "        return assignments\n",
+        "\n",
+        "    # select next package\n",
+        "    for p in packages:\n",
+        "        if p not in assignments:\n",
+        "            package = p\n",
+        "            break\n",
+        "\n",
+        "    for city in domains[package]:\n",
+        "\n",
+        "        assignments[package] = city\n",
+        "\n",
+        "        if capacity_ok(assignments, city):\n",
+        "\n",
+        "            new_domains = forward_check(domains, assignments)\n",
+        "\n",
+        "            # check if any domain empty\n",
+        "            fail = False\n",
+        "            for d in new_domains.values():\n",
+        "                if len(d) == 0:\n",
+        "                    fail = True\n",
+        "\n",
+        "            if not fail:\n",
+        "                result = solve(packages, new_domains, assignments)\n",
+        "                if result:\n",
+        "                    return result\n",
+        "\n",
+        "        del assignments[package]\n",
+        "\n",
+        "    return None"
+      ],
+      "metadata": {
+        "id": "z2RkGbfefCK3"
+      },
+      "execution_count": 17,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# initial domains\n",
+        "domains = {p: allowed[p][:] for p in packages}\n",
+        "\n",
+        "solution = solve(packages, domains, {})\n",
+        "\n",
+        "print(\"Package Assignment:\")\n",
+        "for p in solution:\n",
+        "    print(\"Package\", p, \"-> City\", solution[p])"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "OljkjAVafxrQ",
+        "outputId": "1d29fe2a-549e-4f98-ffb5-3050a1f211cd"
+      },
+      "execution_count": 18,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Package Assignment:\n",
+            "Package 1 -> City B\n",
+            "Package 2 -> City B\n",
+            "Package 3 -> City C\n",
+            "Package 4 -> City A\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "\n",
+        "print(\"\\n--- PACKAGE DELIVERY VISUALIZATION ---\\n\")\n",
+        "\n",
+        "# show which package goes where\n",
+        "for p in packages:\n",
+        "    print(\"Package\", p, \" -> \", solution[p])\n",
+        "\n",
+        "print(\"\\nCity Load Status:\")\n",
+        "\n",
+        "# count packages per city\n",
+        "city_load = {c:0 for c in cities}\n",
+        "\n",
+        "for p in solution:\n",
+        "    city_load[solution[p]] += 1\n",
+        "\n",
+        "for c in cities:\n",
+        "    print(c, \":\", city_load[c], \"/\", capacity[c])\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n",
+        "print(\"\\n--- CONSTRAINT CHECK ---\")\n",
+        "\n",
+        "valid = True\n",
+        "\n",
+        "# check allowed cities\n",
+        "for p in solution:\n",
+        "    if solution[p] not in allowed[p]:\n",
+        "        print(\"Invalid: Package\", p, \"sent to disallowed city\")\n",
+        "        valid = False\n",
+        "\n",
+        "# check capacity\n",
+        "for c in cities:\n",
+        "    if city_load[c] > capacity[c]:\n",
+        "        print(\"Invalid: Capacity exceeded in city\", c)\n",
+        "        valid = False\n",
+        "\n",
+        "# check each package assigned once\n",
+        "if len(solution) != len(packages):\n",
+        "    print(\"Invalid: Some packages unassigned\")\n",
+        "    valid = False\n",
+        "\n",
+        "if valid:\n",
+        "    print(\"All constraints satisfied ✓\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ks3lGN-Khr1G",
+        "outputId": "bdb62035-0e56-4a8d-d271-43b25ec6e87f"
+      },
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- PACKAGE DELIVERY VISUALIZATION ---\n",
+            "\n",
+            "Package 1  ->  B\n",
+            "Package 2  ->  B\n",
+            "Package 3  ->  C\n",
+            "Package 4  ->  A\n",
+            "\n",
+            "City Load Status:\n",
+            "A : 1 / 2\n",
+            "B : 2 / 3\n",
+            "C : 1 / 1\n",
+            "\n",
+            "--- CONSTRAINT CHECK ---\n",
+            "All constraints satisfied ✓\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## Task 2"
+      ],
+      "metadata": {
+        "id": "zieCfRtCf3MP"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "regions = ['A', 'B', 'C', 'D']\n",
+        "colors = ['Red', 'Green', 'Blue']\n",
+        "\n",
+        "# adjacency constraints\n",
+        "neighbors = {\n",
+        "    'A': ['B', 'C'],\n",
+        "    'B': ['A', 'D'],\n",
+        "    'C': ['A', 'D'],\n",
+        "    'D': ['B', 'C']\n",
+        "}\n",
+        "\n",
+        "# domain of each region\n",
+        "domains = {r: colors[:] for r in regions}"
+      ],
+      "metadata": {
+        "id": "AFg2iKwbf0gS"
+      },
+      "execution_count": 21,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "from collections import deque\n",
+        "\n",
+        "\n",
+        "# revise domains\n",
+        "def revise(domains, xi, xj):\n",
+        "\n",
+        "    revised = False\n",
+        "\n",
+        "    for color in domains[xi][:]:\n",
+        "        valid = False\n",
+        "\n",
+        "        for c in domains[xj]:\n",
+        "            if color != c:\n",
+        "                valid = True\n",
+        "\n",
+        "        if not valid:\n",
+        "            domains[xi].remove(color)\n",
+        "            revised = True\n",
+        "\n",
+        "    return revised\n",
+        "\n",
+        "\n",
+        "# AC3 constraint propagation\n",
+        "def ac3(domains):\n",
+        "\n",
+        "    queue = deque()\n",
+        "\n",
+        "    for xi in neighbors:\n",
+        "        for xj in neighbors[xi]:\n",
+        "            queue.append((xi, xj))\n",
+        "\n",
+        "    while queue:\n",
+        "        xi, xj = queue.popleft()\n",
+        "\n",
+        "        if revise(domains, xi, xj):\n",
+        "\n",
+        "            if len(domains[xi]) == 0:\n",
+        "                return False\n",
+        "\n",
+        "            for xk in neighbors[xi]:\n",
+        "                if xk != xj:\n",
+        "                    queue.append((xk, xi))\n",
+        "\n",
+        "    return True"
+      ],
+      "metadata": {
+        "id": "QjugxHQPgAdQ"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# check if assignment valid\n",
+        "def consistent(region, color, assignment):\n",
+        "\n",
+        "    for n in neighbors[region]:\n",
+        "        if n in assignment and assignment[n] == color:\n",
+        "            return False\n",
+        "\n",
+        "    return True\n",
+        "\n",
+        "\n",
+        "def backtrack(assignment):\n",
+        "\n",
+        "    if len(assignment) == len(regions):\n",
+        "        return assignment\n",
+        "\n",
+        "    for r in regions:\n",
+        "        if r not in assignment:\n",
+        "            region = r\n",
+        "            break\n",
+        "\n",
+        "    for color in domains[region]:\n",
+        "\n",
+        "        if consistent(region, color, assignment):\n",
+        "\n",
+        "            assignment[region] = color\n",
+        "\n",
+        "            result = backtrack(assignment)\n",
+        "\n",
+        "            if result:\n",
+        "                return result\n",
+        "\n",
+        "            del assignment[region]\n",
+        "\n",
+        "    return None"
+      ],
+      "metadata": {
+        "id": "EFtSyR8TgDMz"
+      },
+      "execution_count": 23,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# apply arc consistency before search\n",
+        "ac3(domains)\n",
+        "\n",
+        "print(\"Domains after AC3:\")\n",
+        "print(domains)\n",
+        "\n",
+        "solution = backtrack({})\n",
+        "\n",
+        "print(\"\\nMap Coloring Solution:\")\n",
+        "for r in solution:\n",
+        "    print(r, \"->\", solution[r])"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "AjPyUwu7gGFX",
+        "outputId": "78a99fbd-5506-4113-b180-ca30ab67c93e"
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Domains after AC3:\n",
+            "{'A': ['Red', 'Green', 'Blue'], 'B': ['Red', 'Green', 'Blue'], 'C': ['Red', 'Green', 'Blue'], 'D': ['Red', 'Green', 'Blue']}\n",
+            "\n",
+            "Map Coloring Solution:\n",
+            "A -> Red\n",
+            "B -> Green\n",
+            "C -> Green\n",
+            "D -> Red\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "print(\"\\n--- MAP COLORING VISUALIZATION ---\\n\")\n",
+        "\n",
+        "for r in regions:\n",
+        "    print(\"Region\", r, \"->\", solution[r])\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n",
+        "print(\"\\n--- ADJACENT REGION COLOR CHECK ---\\n\")\n",
+        "\n",
+        "checked = set()\n",
+        "valid = True\n",
+        "\n",
+        "for r in neighbors:\n",
+        "    for n in neighbors[r]:\n",
+        "\n",
+        "        # avoid duplicate printing like A-B and B-A\n",
+        "        if (n, r) in checked:\n",
+        "            continue\n",
+        "\n",
+        "        color_r = solution[r]\n",
+        "        color_n = solution[n]\n",
+        "\n",
+        "        print(r, \"(\", color_r, \")  <->  \", n, \"(\", color_n, \")\", end=\"  \")\n",
+        "\n",
+        "        if color_r != color_n:\n",
+        "            print(\"✓ OK\")\n",
+        "        else:\n",
+        "            print(\"✗ SAME COLOR\")\n",
+        "            valid = False\n",
+        "\n",
+        "        checked.add((r, n))\n",
+        "\n",
+        "\n",
+        "\n",
+        "print(\"\\n--- FINAL RESULT ---\")\n",
+        "\n",
+        "if valid:\n",
+        "    print(\"All adjacency constraints satisfied ✓\")\n",
+        "else:\n",
+        "    print(\"Some constraints violated ✗\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6U6JgtlpgIph",
+        "outputId": "9367f382-3f35-4c81-c867-58b554afddac"
+      },
+      "execution_count": 26,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- MAP COLORING VISUALIZATION ---\n",
+            "\n",
+            "Region A -> Red\n",
+            "Region B -> Green\n",
+            "Region C -> Green\n",
+            "Region D -> Red\n",
+            "\n",
+            "--- ADJACENT REGION COLOR CHECK ---\n",
+            "\n",
+            "A ( Red )  <->   B ( Green )  ✓ OK\n",
+            "A ( Red )  <->   C ( Green )  ✓ OK\n",
+            "B ( Green )  <->   D ( Red )  ✓ OK\n",
+            "C ( Green )  <->   D ( Red )  ✓ OK\n",
+            "\n",
+            "--- FINAL RESULT ---\n",
+            "All adjacency constraints satisfied ✓\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# NEW MAP PROBLEM\n",
+        "\n",
+        "regions = ['A','B','C','D','E','F','G']\n",
+        "colors = ['Red','Green','Blue']\n",
+        "\n",
+        "neighbors = {\n",
+        "    'A':['B','C'],\n",
+        "    'B':['A','C','D'],\n",
+        "    'C':['A','B','D','E','F'],\n",
+        "    'D':['B','C','E'],\n",
+        "    'E':['C','D','F'],\n",
+        "    'F':['C','E'],\n",
+        "    'G':[]\n",
+        "}\n",
+        "\n",
+        "# reset domains\n",
+        "domains = {r: colors[:] for r in regions}"
+      ],
+      "metadata": {
+        "id": "l6OJwkrVil1h"
+      },
+      "execution_count": 27,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "ac3(domains)\n",
+        "\n",
+        "print(\"Domains after AC3:\")\n",
+        "print(domains)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "B6LtL7mekpmd",
+        "outputId": "ddd46894-25b6-4266-da61-d72bf50ae08a"
+      },
+      "execution_count": 28,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Domains after AC3:\n",
+            "{'A': ['Red', 'Green', 'Blue'], 'B': ['Red', 'Green', 'Blue'], 'C': ['Red', 'Green', 'Blue'], 'D': ['Red', 'Green', 'Blue'], 'E': ['Red', 'Green', 'Blue'], 'F': ['Red', 'Green', 'Blue'], 'G': ['Red', 'Green', 'Blue']}\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "solution = backtrack({})\n",
+        "\n",
+        "print(\"\\nMap Coloring Solution:\")\n",
+        "for r in solution:\n",
+        "    print(r, \"->\", solution[r])"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "N8icmURJkr0U",
+        "outputId": "f48b472b-9f00-4969-c765-e6091d9285da"
+      },
+      "execution_count": 29,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "Map Coloring Solution:\n",
+            "A -> Red\n",
+            "B -> Green\n",
+            "C -> Blue\n",
+            "D -> Red\n",
+            "E -> Green\n",
+            "F -> Red\n",
+            "G -> Red\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "print(\"\\n--- MAP COLORING VISUALIZATION ---\\n\")\n",
+        "\n",
+        "for r in regions:\n",
+        "    print(\"Region\", r, \"->\", solution[r])\n",
+        "\n",
+        "\n",
+        "\n",
+        "\n",
+        "print(\"\\n--- ADJACENT REGION COLOR CHECK ---\\n\")\n",
+        "\n",
+        "checked = set()\n",
+        "valid = True\n",
+        "\n",
+        "for r in neighbors:\n",
+        "    for n in neighbors[r]:\n",
+        "\n",
+        "        # avoid duplicate printing like A-B and B-A\n",
+        "        if (n, r) in checked:\n",
+        "            continue\n",
+        "\n",
+        "        color_r = solution[r]\n",
+        "        color_n = solution[n]\n",
+        "\n",
+        "        print(r, \"(\", color_r, \")  <->  \", n, \"(\", color_n, \")\", end=\"  \")\n",
+        "\n",
+        "        if color_r != color_n:\n",
+        "            print(\"✓ OK\")\n",
+        "        else:\n",
+        "            print(\"✗ SAME COLOR\")\n",
+        "            valid = False\n",
+        "\n",
+        "        checked.add((r, n))\n",
+        "\n",
+        "\n",
+        "\n",
+        "print(\"\\n--- FINAL RESULT ---\")\n",
+        "\n",
+        "if valid:\n",
+        "    print(\"All adjacency constraints satisfied ✓\")\n",
+        "else:\n",
+        "    print(\"Some constraints violated ✗\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "QgPJ61UTkvLY",
+        "outputId": "a537c94b-2834-48d0-e9b1-79f5fdef1a7c"
+      },
+      "execution_count": 30,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- MAP COLORING VISUALIZATION ---\n",
+            "\n",
+            "Region A -> Red\n",
+            "Region B -> Green\n",
+            "Region C -> Blue\n",
+            "Region D -> Red\n",
+            "Region E -> Green\n",
+            "Region F -> Red\n",
+            "Region G -> Red\n",
+            "\n",
+            "--- ADJACENT REGION COLOR CHECK ---\n",
+            "\n",
+            "A ( Red )  <->   B ( Green )  ✓ OK\n",
+            "A ( Red )  <->   C ( Blue )  ✓ OK\n",
+            "B ( Green )  <->   C ( Blue )  ✓ OK\n",
+            "B ( Green )  <->   D ( Red )  ✓ OK\n",
+            "C ( Blue )  <->   D ( Red )  ✓ OK\n",
+            "C ( Blue )  <->   E ( Green )  ✓ OK\n",
+            "C ( Blue )  <->   F ( Red )  ✓ OK\n",
+            "D ( Red )  <->   E ( Green )  ✓ OK\n",
+            "E ( Green )  <->   F ( Red )  ✓ OK\n",
+            "\n",
+            "--- FINAL RESULT ---\n",
+            "All adjacency constraints satisfied ✓\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "zTM1Tds9kymT"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
